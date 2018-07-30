@@ -1,3 +1,7 @@
+/* 
+koa-compose
+参考：https://juejin.im/post/59c00a39f265da064c3853b7
+*/
 function foo(context, next) {
   console.log('----middleware 1 ----')
   return new Promise(resolve => {

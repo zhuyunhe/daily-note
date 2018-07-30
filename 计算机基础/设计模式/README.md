@@ -1,2 +1,1 @@
-# BasicKnowledge
-记录一些开发中用到的基础知识，好的博客
+[JS设计模式](https://github.com/MuYunyun/blog/tree/master/Basic%20Skill/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
