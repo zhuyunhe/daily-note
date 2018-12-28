@@ -27,7 +27,10 @@ user-select: none;
 
 ### 禁止保存或拷贝图像
 ```
-img{-webkit-touch-callout: none;}
+img{
+-webkit-touch-callout: none;
+pointer-events: none;
+}
 ```  
 
 ### 解决字体在移动端比例缩小后出现锯齿的问题  
@@ -89,3 +92,4 @@ element{
 [掘金-移动端常见bug-1](https://juejin.im/post/5b163eb5e51d4506c4751e44)
 
 [掘金-移动端常见bug-2](https://juejin.im/post/5af918636fb9a07ac5603ecb)
+
