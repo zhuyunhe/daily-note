@@ -4,8 +4,7 @@
 
 // console.log(result); // 8
 
-let userIDs = [1, 2, 3];
-
+//一个简单的累加器
 var arr = [0,1,2,3,4]
 var sum = arr.reduce(function (accumulator, currentValue){
   console.log(accumulator, currentValue)
@@ -13,21 +12,14 @@ var sum = arr.reduce(function (accumulator, currentValue){
 })
 console.log(sum)
 
-return
-
-var arrString = 'abcdaabc';
-let result =  arrString.split('').reduce(function (res, cur) {
+//用reduce统计字符串中每个字母出现频次
+var arrString = 'abbacdefdcfdsd'
+let result = arrString.split('').reduce(function(res, cur) {
   res[cur] ? res[cur]++ : res[cur] = 1
-  return res;
+  return res
 }, {})
 
-// console.log(result)
-
-/* function runPromiseByQueue(myPromises){
-  myPromises.reduce(
-    (previousPromise, nextPromise) => previousPromise.then(() => nextPromise )
-  , Promise.resolve())
-} */
+//reduce实现让一串promise依次执行
 function runPromiseByQueue(myPromises) {
   myPromises.reduce(
     (previousPromise, nextPromise) => previousPromise.then(() => nextPromise),
@@ -44,24 +36,11 @@ const createPromise = (time, id) =>
 
 
 
-/* const createPromise = (time, id) => {
-  new Promise(resolve => {
-    return setTimeout(() => {
-      console.log('promise', id)
-      resolve()
-    }, time)
-  })
-} */
+
 runPromiseByQueue([
   createPromise(3000, 1),
   createPromise(2000, 2),
   createPromise(1000, 3)
 ]);
 
-/* runPromiseByQueue([
-  createPromise(3000,1),
-  createPromise(2000, 2),
-  createPromise(1000, 3),
-  createPromise(3000, 4)
-]) */
 
