@@ -88,6 +88,17 @@ element{
 }
 ```
 
+### flex布局，在vivo一些机型上，width没有撑开问题，flex-shrink设为0  
+```
+ul{
+  display: flex;
+}
+li{
+  flex: 0 0 100px;
+  width: 100px;
+}
+```
+
 ## 参考
 [掘金-移动端常见bug-1](https://juejin.im/post/5b163eb5e51d4506c4751e44)
 

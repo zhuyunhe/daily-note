@@ -1,0 +1,3 @@
+## render函数  
+render是React组件中最重要的函数，一个React组件可以忽略其他所有函数都不实现，但一定要实现render函数，因为所有React组件的父类对除render之外的生命周期函数都有默认实现。  
+render函数并不做实际的渲染动作，它只是返回一个JSX描述的结构，最终由React来操作渲染过程。如果render返回一个nul或者false，等于告诉React，这个组件这次不需要渲染任何DOM元素。
