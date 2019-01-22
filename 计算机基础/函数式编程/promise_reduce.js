@@ -1,7 +1,9 @@
 function runPromiseByQueue(myPromises) {
+  console.log(myPromises)
   myPromises.reduce(
     (previousPromise, nextPromise) => {
-      console.log('gg')
+      console.log(nextPromise);
+      
       return previousPromise.then(() => nextPromise() )
     },
     Promise.resolve()
@@ -30,7 +32,7 @@ const createPromise = (time, id) => () =>
       solve(id);
     }, time)
   );
-
+// console.log(createPromise(3000, 1))
 runPromiseByQueue([
   createPromise(3000, 1),
   createPromise(2000, 2),
