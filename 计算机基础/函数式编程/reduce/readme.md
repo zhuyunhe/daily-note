@@ -30,6 +30,17 @@ const forEach = f => arr => arr.reduce((accumulator,x) => {
 ```
 reduce :: ((a, b) -> a) -> a -> [b] -> a  
 把它拆开来看，更方便理解
-reduce :: ((a, b) -> a) -> a -> [b] -> a  
+reduce :: (reducer -> initialValue -> list) -> result  
+
 reducer :: (a, b) -> a
-```
+initialValue :: a
+list :: [b]  
+result :: a
+```   
+reduce接受三个参数：累积器reducer、累积初始值initialValue和待累积列表。我们迭代遍历列表的元素，利用累积器reudcer对累积值和列表当前元素进行累积操作，reducer输出的新累积值作为下次累积操作的输入。这样依次循环迭代，直到遍历结束，输出最终的累积值。  
+
+***
+
+reduce在某些编程语言中也被成为**fold**，中文翻译为折叠、归约等。我们可以把列表当作一把展开的扇子，列表中的每个元素做扇骨，则reduce的过程可以看成从左到右折叠扇子的过程，即**foldl**，当然我们也可以从右向左折叠上字，即reduceRight，**foldr**。
+
+https://tech.meituan.com/2017/10/12/functional-programming-in-redux.html
