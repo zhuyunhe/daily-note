@@ -43,4 +43,21 @@ reduce接受三个参数：累积器reducer、累积初始值initialValue和待�
 
 reduce在某些编程语言中也被成为**fold**，中文翻译为折叠、归约等。我们可以把列表当作一把展开的扇子，列表中的每个元素做扇骨，则reduce的过程可以看成从左到右折叠扇子的过程，即**foldl**，当然我们也可以从右向左折叠上字，即reduceRight，**foldr**。
 
+reduce代码实现：  
+```
+const reduce = (reducer, initialValue, list) => {
+  if(list.length === 0) return initialValue
+  if(list.length === 1) return list[0]
+  let acc = initialValue || list[0]
+  let val
+  for(let i= initialValue ? 0 : 1; i<list.length; i++){
+    val = list[i]
+    acc = reducer(acc, val)
+  }
+  return acc
+}
+const sum = (a,b) => a+b
+reduce(sum,1, [1,2,3,4,5])
+//16
+```
 https://tech.meituan.com/2017/10/12/functional-programming-in-redux.html
