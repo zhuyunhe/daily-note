@@ -60,4 +60,14 @@ const sum = (a,b) => a+b
 reduce(sum,1, [1,2,3,4,5])
 //16
 ```
+
+### 关于reduce的几道面试题   
+* [sum](./sum.js)  
+* [flatten](./flatten.js) 
+
+
+
+
+
+
 https://tech.meituan.com/2017/10/12/functional-programming-in-redux.html
