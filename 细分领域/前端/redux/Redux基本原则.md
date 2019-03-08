@@ -7,3 +7,6 @@ Flux的基本原则是“单向数据流”，Redux在此基础上强调三个�
 * 数据改变只能通过纯函数完成(Changes are made with pure functions)  
 
 > 如果你愿意限制做事方式的灵活度，你几乎总会发现可以做得更好。
+
+
+http://huziketang.mangojuice.top/books/react/lesson40
