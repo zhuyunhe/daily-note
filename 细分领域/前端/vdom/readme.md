@@ -31,7 +31,9 @@
 ```   
 该对象就是我们常说的虚拟DOM，原生DOM因为浏览器厂商需要实现众多的规范（各种HTML5属性、DOM事件等），即使创建一个空的div，也是要付出昂贵的代价。虚拟DOM提升性能的点在于DOM发生变化的时候，通过diff算法对比JavaScript对象，计算出需要变更的DOM，然后只对变化的DOM进行操作，而不是更新整个视图。  
 
+
 ## h函数  
-主流的虚拟DOM库，通常都有一个h函数，也就是React中的React.createElement以及Vue中的render方法中用到的createElement，这个方法通常会返回一个虚拟节点描述对象，通常简称为‘VNode‘。由众多’Vnode‘组成的树，我们称之为虚拟Dom（Virtual DOM）。  
+主流的虚拟DOM库，通常都有一个h函数，也就是React中的React.createElement以及Vue中的render方法中用到的createElement，这个方法通常会返回一个真实DOM描述对象，通常简称为‘VNode‘，这个‘Vnode’其实就是我们平时写的组件所产生的东西，不管你是用react还是vue或是其他框架，组件的本质就是产生一个‘VNode’。  
+由众多’Vnode‘组成的树，我们称之为虚拟Dom（Virtual DOM）。想要把VNode渲染成真实DOM，我们还需要一个渲染器renderer。  
 ## diff算法  
 https://juejin.im/post/5d085ce85188255e1305cda1
