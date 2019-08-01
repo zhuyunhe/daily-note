@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <div class='form'>
+    <div class="form-item">
+      <div class='label'>
+        <span>用户名：</span>
+        <input id='name' name='用户名' type="text" />
+      </div>
+    </div>
+
+    <div class="form-item">
+      <div class='label'>
+        <span>年龄：</span>
+        <input id='age' name='年龄' type="text" />
+      </div>
+    </div>
+  </div>
+
+  <button id='submit'>提交</button>
+  <script>
+    var isEmail = value => { console.log(value); return /^\w+([+-.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(value); }
+
+    // 校验工具函数
+    var isNotEmpty = value => value !== '';
+
+    var isNumber = value => /^[0-9]*$/.test(value);
+
+    var isBetween = (value, min, max) => {
+      if (max === undefined) {
+        max = Number.MAX_VALUE;
+      }
+      if (min === undefined) {
+        min = Number.MIN_VALUE;
+      }
+      return value > min && value < max;
+    }
+
+    // 校验器
+    let validators = {
+      name: [{
+        validator: isNotEmpty,
+        errorMsg: '姓名不能为空'
+      }],
+      age: [
+        {
+          validator: isNumber,
+          errorMsg: '年龄必须为数字'
+        },
+        {
+          validator: isBetween,
+          errorMsg: '年龄必须为大于 0 并且小于 100',
+          params: [0, 100]
+        }
+      ]
+    }
+
+    var validatorCreater = (target, validator) => new Proxy(target, {
+      // 保存校验器
+      _validator: validator,
+      set(target, key, value, receiver) {
+        // 如果赋值的属性存在校验器，则进行校验
+        if (this._validator[key]) {
+          // 遍历其多个子校验器
+          for (validatorStrategy of this._validator[key]) {
+            let { validator, errorMsg = '', params = [] } = validatorStrategy;
+            if (!validator.call(null, value, ...params)) {
+              throw new Error(errorMsg);
+              return false;
+            }
+          }
+        }
+        // 赋值语句放最后，如果失败不赋值，如果不存在校验器则赋值
+        return Reflect.set(target, key, value, receiver);
+      }
+    })
+
+    document.getElementById('submit').addEventListener('click', submit);
+    function submit() {
+      // // 创建表单校验对象实例
+      let formObj = validatorCreater({}, validators);
+      // 获取form元素
+      let eleName = document.getElementById('name');
+      let eleAge = document.getElementById('age');
+
+      // 开始校验，并接收错误信息
+      try {
+        formObj.name = eleName.value;
+        formObj.age = eleAge.value;
+      } catch (e) {
+        alert(e.message);
+        return false;
+      }
+      // 创建表单校验对象实例
+      alert('验证通过');
+      return true;
+    }
+  </script>
+</body>
+
+</html>

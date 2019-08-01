@@ -1,0 +1,103 @@
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Vue 双向绑定</title>
+  <style>
+    #app {
+      margin: 100px auto 0 auto;
+      width: 300px;
+    }
+
+    #btn {
+      margin: 10px auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <input type="text" id="input" />
+    <div>输入： <span id="title"></span></div>
+    <button type="button" name="button" id="btn">添加到Todolist</button>
+    <ul id="list"></ul>
+  </div>
+</body>
+
+<script>
+
+  const arr = [];
+  const input = document.getElementById("input");
+  const title = document.getElementById("title");
+  const list = document.getElementById("list");
+  const btn = document.getElementById("btn");
+
+
+  // 渲染todolist列表
+  const Render = {
+    // 初始化
+    init: function (arr) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < arr.length; i++) {
+        const li = document.createElement("li");
+        li.textContent = arr[i];
+        fragment.appendChild(li);
+      }
+      list.appendChild(fragment);
+    },
+    addList: function (val) {
+      const li = document.createElement("li");
+      li.textContent = val;
+      list.appendChild(li);
+    }
+  };
+
+  const obj = {
+    info: {
+      name: 'eason',
+      blogs: ['webpack', 'babel', 'postcss']
+    }
+  }
+  let handler = {
+    get(target, key, receiver) {
+      console.log('get', key)
+      // 递归创建并返回
+      if (typeof target[key] === 'object' && target[key] !== null) {
+        return new Proxy(target[key], handler)
+      }
+      return Reflect.get(target, key, receiver)
+    },
+    set(target, key, value, receiver) {
+      console.log('set', key, value)
+      if (key === "name") {
+        input.value = value;
+        title.innerHTML = value;
+      }
+      else if (key !== "length") {
+        Render.addList(value);
+      }
+      return Reflect.set(target, key, value, receiver)
+    }
+  }
+  let proxy = new Proxy(obj, handler)
+
+  // 初始化
+  window.onload = function () {
+    Render.init(obj.info.blogs);
+  };
+
+  input.addEventListener("keyup", function (e) {
+    // newObj.text = e.target.value;
+    proxy.info.name = e.target.value;
+  });
+
+  btn.addEventListener("click", function () {
+    // newArr.push(parseInt(newObj.text));
+    proxy.info.blogs.push(obj.info.name)
+  });
+</script>
+
+</html>
