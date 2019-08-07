@@ -1,5 +1,6 @@
 # reduce 
 reduce是对列表的迭代操作的抽象，几乎所有的列表迭代操作map、filter等都可以基于reduce来实现。  
+reduce对于将一种逻辑应用到一组值中并最终得到一个单一结果的情况特别适用。
 ## 例子  
 ### reduce实现map
 ```
