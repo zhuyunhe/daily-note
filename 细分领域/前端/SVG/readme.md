@@ -13,7 +13,25 @@ SVG有许多不同的元素。最常用的是：
 * path：在两个点之间创建一条路径
 * textpath：在两个点之间创建一条路径，并创建一个链接文本元素
 * polygon：允许创建任意类型的多边形
-* g：单独的元素
+* g：单独的元素  
+
+## viewport和viewBox
+SVG相对其容器的大小由svg元素的width和height属性设置，这两属性值的单位默认是像素，但也可以使用其他常用单位，如```%```、```em```等。这个就是viewport。  
+viewBox允许你在SVG画布中定义一个新的坐标系统。它类似于一个新的视图框，当我们改变viewBox的起始点坐标(x, y)时，视图框会跟着移动，当我们调整viewBox的宽高时，视图框的大小也会调整。  
+
+## 页面中插入SVG  
+下面列举几种常见的方法：  
+* 使用img标签  
+* 使用CSS的```background-image```属性  
+* 在HTML中内联svg元素  
+* 使用objetc、iframe或者embed标签  
+**如果我们需要SVG与脚本进行交互，例如做SVG动画，那么SVG必须以内联。**  
+
+## SVG vs Canvas  
+SVG和Canvas都是Web平台一个很好的补充，但Canvas和SVG的最大区别是：Canvas是基于像素的，而不是基于矢量的，所以  
+* canvas具有与基于像素的png、jpg和gif图像格式相同的缩放问题。  
+* 不能像编辑SVG元素一样直接使用js、css编辑canvas图像。
+
 
 - 入门  
 [MDN文档](https://developer.mozilla.org/zh-CN/docs/Web/SVG/Tutorial)  

@@ -66,6 +66,7 @@
       console.log('get', key)
       // 递归创建并返回
       if (typeof target[key] === 'object' && target[key] !== null) {
+        console.log('create new Proxy')
         return new Proxy(target[key], handler)
       }
       return Reflect.get(target, key, receiver)

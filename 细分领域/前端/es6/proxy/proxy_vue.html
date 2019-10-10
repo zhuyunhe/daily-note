@@ -1,0 +1,193 @@
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Vue 双向绑定</title>
+  <style>
+    #app {
+      margin: 100px auto 0 auto;
+      width: 300px;
+    }
+
+    #btn {
+      margin: 10px auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <input type="text" id="input" />
+    <div>输入： <span id="title"></span></div>
+    <button type="button" name="button" id="btn">添加到Todolist</button>
+    <button type="button" name="button" id="test_btn">test</button>
+    <ul id="list"></ul>
+  </div>
+</body>
+<script>
+  function isObject(val) {
+    return val !== null && typeof val === 'object'
+  }
+  const observableValueRE = /^\[object (?:Object|Array|Map|Set|WeakMap|WeakSet)\]$/
+  function canObserve(val) {
+    return observableValueRE.test(Object.prototype.toString.call(val))
+  }
+  function hasOwn(target, key){
+    const hasOwnProperty = Object.prototype.hasOwnProperty
+    return hasOwnProperty.call(target, key)
+  }
+</script>
+<script>
+
+  const arr = [];
+  const input = document.getElementById("input");
+  const title = document.getElementById("title");
+  const list = document.getElementById("list");
+  const btn = document.getElementById("btn");
+  const testBtn = document.getElementById("test_btn");
+
+  /* 🐂 */
+  const rawToReactive = new WeakMap()
+  const reactiveToRaw = new WeakMap()
+  /* 🍺 */
+  
+  // 渲染器
+  const Render = {
+    // 初始化
+    init: function (arr) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < arr.length; i++) {
+        const li = document.createElement("li");
+        li.textContent = arr[i];
+        fragment.appendChild(li);
+      }
+      list.appendChild(fragment);
+    },
+    addList: function (val) {
+      const li = document.createElement("li");
+      li.textContent = val;
+      list.appendChild(li);
+    },
+    setName: function (val) {
+      input.value = val;
+      title.innerHTML = val;
+    }
+  };
+
+  const obj = {
+    info: {
+      name: 'eason',
+      blogs: ['webpack', 'babel', 'postcss']
+    }
+  }
+  const handler = {
+    get(target, key, receiver) {
+      console.log('get', key)
+      const res = Reflect.get(target, key, receiver)
+      // 惰性创建并返回
+      if (isObject(res)) {
+        return createReactiveObject(target[key], rawToReactive, reactiveToRaw, handler)
+      } else{
+        return res
+      }
+    },
+    set(target, key, value, receiver) {
+      const hadKey = hasOwn(target, key)
+      const oldValue = target[key]
+      console.log('key: ' + key + ',oldValue: '+oldValue + ', value: ' + value)
+
+      value = reactiveToRaw.get(value) || value
+
+      console.log(target)
+      const res = Reflect.set(target, key, value, receiver)
+
+
+      if(!hadKey){
+        console.log('trigger add ...')
+        Render.addList(value);
+      } 
+      
+      else if(value !== oldValue){
+        console.log('trigger set ...')
+        Render.setName(value)
+      }
+      return res
+    }
+  }
+  
+  // let proxy = new Proxy(obj, handler)
+  let proxy = createReactiveObject(obj, rawToReactive, reactiveToRaw, handler)
+
+  // let _proxy = createReactiveObject(proxy, rawToReactive, reactiveToRaw, handler)
+
+  /* 🐂 */
+  function createReactiveObject(
+    target,
+    toProxy,
+    toRaw,
+    handler
+  ) {
+    if(!isObject(target)){
+      console.warn(`value cannot be made reactive: ${String(target)}`)
+      return target
+    }
+    
+    // target already has corresponding Proxy
+    let observed = toProxy.get(target)
+    if(observed !== undefined){
+      return observed
+    }
+
+    // target is already a Proxy
+    if(toRaw.has(target)){
+      return target
+    }
+
+    // 基本数据类型和某些内置对象是（Date、Promise等）不做操作
+    if(!canObserve(target)){
+      return target
+    }
+
+    observed = new Proxy(target, handler)
+    toProxy.set(target, observed)
+    toRaw.set(observed, target)
+
+    return observed
+  }
+  /* 🍺 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // 初始化
+  window.onload = function () {
+    Render.init(obj.info.blogs);
+  };
+
+  input.addEventListener("keyup", function (e) {
+    proxy.info.name = e.target.value;
+  });
+
+  btn.addEventListener("click", function () {
+    proxy.info.blogs.push(obj.info.name)
+  });
+  testBtn.addEventListener("click", function () {
+    obj.info.blogs.push(obj.info.name)
+    console.log(obj)
+  });
+</script>
+
+</html>
