@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>threejs</title>
+  <script src="http://threejs.org/build/three.min.js"></script>
+</head>
+
+<body>
+  <script>
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    var geometry = new THREE.BoxGeometry(2, 2, 2);
+
+    var cubeMaterials = [
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/1.jpg'), side: THREE.DoubleSide }),  //right
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/2.jpg'), side: THREE.DoubleSide }),  //left
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/3.jpg'), side: THREE.DoubleSide }),  //top
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/4.jpg'), side: THREE.DoubleSide }),  //bottom
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/5.jpg'), side: THREE.DoubleSide }),  //front
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('../assets/img/6.jpg'), side: THREE.DoubleSide })   //back
+    ]
+
+    // var material = new THREE.MeshFaceMaterial(cubeMaterials)
+    // MeshFaceMaterial has been removed. Use an array of materials instead.
+    var cube = new THREE.Mesh(geometry, cubeMaterials)
+    scene.add(cube)
+    camera.position.z = 3
+
+    var update = function () {
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+    }
+
+    var render = function () {
+      renderer.render(scene, camera)
+    }
+
+    var GameLoop = function () {
+      requestAnimationFrame(GameLoop)
+      update()
+      render()
+    }
+    GameLoop()
+
+    var onResize = function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener('resize', onResize, false)
+  </script>
+</body>
+
+</html>
