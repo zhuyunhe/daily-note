@@ -7,20 +7,72 @@
   <title>Document</title>
 </head>
 <body>
+  <img src="https://img.meituan.net/beautyimg/ed576639f4c5e0f75265a98b3e13e2c955408.png">
   <script>
-  
+  class ASTElement {
+    /* 
+      type: 'Element' | 'Text' | 'Comment'
+      children: 子节点
+      tag: 标签名，只有Element节点有
+      text: 文本内容，只有Text、Comment节点有
+      data: attrs属性数据
+      parent: 父节点
+    */
+    constructor(type, children, tag, text, data, parent){
+      this.type = type;
+      this.children = children;
+      this.tag = tag;
+      this.text = text;
+      this.data = data;
+      this.parent = parent;
+    }
+  }
+
+  // 解析出；
+  var result = {
+    children: []
+  }
+  var stack = []
+  var parent = result
+  stack.push(parent)
+
   var handler = {
-    startElement: function (sTagName, oAttrs) { 
-      console.log('startElement: ' + sTagName)
+    startElement: function (sTagName, oAttrs, tag) { 
+      // console.log('tag: ' + tag)
+      // console.log('startElement: ' + sTagName)
+      // console.log('oAttrs: ' + JSON.stringify(oAttrs))
+      debugger
+      let astElement = new ASTElement('Element',[], sTagName, '', oAttrs, parent)
+
+      parent.children.push(astElement)
+      if (!tag.endsWith('/>')) {
+        // 如果不是自闭和标签，入栈
+        stack.push(astElement)
+        parent = astElement
+      }
     },
     endElement: function (sTagName) {
-      console.log('endElement: ' + sTagName)
+      if(sTagName === parent.tag) {
+        stack.pop()
+        parent = stack[stack.length - 1]
+      } else{
+        throw new Error('闭合标签对不上，html 语法出错')
+      }
     },
+    // 处理文本内容
     characters: function (s) { 
-      console.log('characters: ' + s)
+      // console.log('characters: ' + s)
+      if(parent.children[parent.children.length - 1] && parent.children[parent.children.length-1].type === 'Text'){
+        parent.children[parent.children.length - 1].text += s
+      } else{
+        let astElement = new ASTElement('Text', [], '', s, [], parent)
+        parent.children.push(astElement)
+      }
     },
+    // 处理注释内容
     comment: function (s) { 
-      console.log('comment: ' + s)
+      let astElement = new ASTElement('Comment', [], '', s, [], parent)
+      parent.children.push(astElement)
     }
   };
   function SimpleHtmlParser() {
@@ -34,9 +86,12 @@
 
     startTagRe: /^<([^>\s\/]+)((\s+[^=>\s]+(\s*=\s*((\"[^"]*\")|(\'[^']*\')|[^>\s]+))?)*)\s*\/?\s*>/m,
     endTagRe: /^<\/([^>\s]+)[^>]*>/m,
-    attrRe: /([^=\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm,
+    attrRe: /([^=|\/\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm,
 
     parse: function (s, oHandler) {
+      
+
+
       if (oHandler)
         this.contentHandler = oHandler;
 
@@ -48,12 +103,14 @@
         // Comment
         if (s.substring(0, 4) == "<!--") {
           index = s.indexOf("-->");
-          if (index != -1) {
+          if (index !== -1) {
+            console.log('这些是注释内容')
             this.contentHandler.comment(s.substring(4, index));
             s = s.substring(index + 3);
             treatAsChars = false;
           }
           else {
+            console.log('处理文字~')
             treatAsChars = true;
           }
         }
@@ -73,6 +130,7 @@
             treatAsChars = false;
           }
           else {
+            console.log('处理文字~')
             treatAsChars = true;
           }
         }
@@ -83,22 +141,25 @@
             lm = RegExp.lastMatch;
             rc = RegExp.rightContext;
 
+            // 提取attribute属性
             lm.replace(this.startTagRe, function () {
               return oThis.parseStartTag.apply(oThis, arguments);
             });
+
 
             s = rc;
             treatAsChars = false;
           }
           else {
+          console.log('处理文字~')
             treatAsChars = true;
           }
         }
-
         if (treatAsChars) {
           index = s.indexOf("<");
+          // 后面已经没有任何标签了，因为不管什么标签，都要以<开头
           if (index == -1) {
-            this.contentHandler.characters(s);
+            this.contentHandler.characters(s, true);
             s = "";
           }
           else {
@@ -108,12 +169,14 @@
         }
 
         treatAsChars = true;
+
       }
+      return result.children
     },
 
     parseStartTag: function (sTag, sTagName, sRest) {
       var attrs = this.parseAttributes(sTagName, sRest);
-      this.contentHandler.startElement(sTagName, attrs);
+      this.contentHandler.startElement(sTagName, attrs, sTag);
     },
 
     parseEndTag: function (sTag, sTagName) {
@@ -143,22 +206,65 @@
     }
   };  
 
-  var source = `<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-  </head>
-  <body>
-    <!-- 我是注释 -->
-    <p class="name">zhuyunhe</p>
-  </body>
-  </html>`
-
+  var source = `
+  <!-- 213123 -->
+  12345
+  <div class="con" style="width: 100px; height: 100px;">开始了，gogogo
+    傻逼瞎啊
+  <p>
+    123
+    <img alt=\"\" src=\"https://img.meituan.net/beautyimg/0fdb13cf6dbdd7f1963d6da3d90ce87039028.jpg\" />
+    <img alt=\"\" src=\"https://img.meituan.net/beautyimg/d3ec8903b486c30dfa4ed4b8b791335268677.jpg\" />
+  </p>
+  <p></p>
+  <p>
+    <img alt=\"\" src=\"https://img.meituan.net/beautyimg/8464972e9033ccb82afdf8533eafa84840923.jpg\" />
+  </p>
+  <p>
+    <img alt=\"\" src=\"https://img.meituan.net/beautyimg/924a08c730cc142806546af49f1fa1dd100657.jpg\" />
+  </p>
+  <hr />
+  <p>
+    声明：不收取任何费用，具体色号以实物为准。中奖用户收到奖品后2周内不填写试用报告，
+    此后3个月禁止参与免费试用活动。活动中涉及的实物礼品，与苹果公司无关。
+  </p>
+  <p>
+    <a href=\"https://m.dianping.com/beauty-salvia/try-center/report.html?utm_source=xqy\">
+      <img alt=\"\" src=\"https://img.meituan.net/beautyimg/ed576639f4c5e0f75265a98b3e13e2c955408.png\" />
+    </a>
+  </p>
+  </div>
+  结束了，哈哈哈
+  
+  
+  `
+  source = '<div><div><p>23</p></div><p>456</p></div>'
+  const toJSX = (array) => {
+    let jsx = array.reduce((cur, nextEle)=>{
+      if(nextEle.type === 'Text'){
+        return cur + nextEle.text
+      }
+      if(nextEle.type === 'Element') {
+        let attr = nextEle.data.map(item => {
+          return `${item.name}="${item.value}" `
+        })
+        // console.log(attr.join(" "))
+        return cur + `<${nextEle.tag} ${attr.join(" ").trim()}>${nextEle.text}${toJSX(nextEle.children)}</${nextEle.tag}>`
+      }
+      if(nextEle.type === 'Comment') {
+        return cur + `<!-- ${nextEle.text} -->`
+      }
+    }, '')
+    return jsx
+  }
   const sp = new SimpleHtmlParser()
-  sp.parse(source, handler)
+  const tree = sp.parse(source, handler)
+  const jsx = toJSX(tree)
+  console.log(tree)
+  console.log(jsx)
+
+
+  parent = null
 </script>
 </body>
 </html>
