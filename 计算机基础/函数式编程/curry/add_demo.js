@@ -33,7 +33,7 @@ const _curry  = (fn, arr=[]) => (...args) => (
 } */
 const curried = _curry(add)
 
-console.log(curried(1,3)(2));
+console.log(curried(1)(2)(3));
 
 
 //一道面试题
@@ -43,6 +43,15 @@ function sum(...args){
   return fn
 }
 
-console.log(sum(1,10,20)(3)(4).valueOf());
+// console.log(sum(1,10,20)(3)(4).valueOf());
 
 
+function _sum(...args){
+  let fn = (...args_fn) => _sum(...args.concat(args_fn))
+  //return args.reduce((a,b) => a+b)
+  console.log(args)
+  console.log(args.reduce((a, b) => a + b))
+  return fn
+}
+
+// console.log(_sum(1,2,3)(4)(5))

@@ -3,10 +3,8 @@ import animate from './animateplus.js';
 animate({
   elements: "div",
   duration: 2000,
-  delay: index => index * 100,
+  optimize: true,
+  delay: index => index * 1000,
   transform: ["scale(0)", "scale(1)"]
+  // transform: ["translate(0%)", "translate(500%)"]
 })
-  .then(options => animate({
-    ...options,
-    transform: ["translate(0%)", "translate(500%)"]
-  }));

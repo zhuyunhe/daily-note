@@ -269,8 +269,10 @@ const trackTime = (timing, now) => {
 const resetTime = object =>
   object.startTime = 0;
 
-const getProgress = ({ elapsed, duration }) =>
-  duration > 0 ? Math.min(elapsed / duration, 1) : 1;
+const getProgress = ({ elapsed, duration }) => {
+  console.log('elapsed: ' + elapsed)
+  return duration > 0 ? Math.min(elapsed / duration, 1) : 1;
+}
 
 const setSpeed = (speed, value, index) =>
   speed > 0 ? computeValue(value, index) / speed : 0;
@@ -357,6 +359,7 @@ const tick = now => {
       options
     } = object;
     // object is an animation
+
     if (direction) {
       let curve = progress;
       switch (progress) {
@@ -379,7 +382,7 @@ const tick = now => {
       if (gaussian) setDeviation(object, curve);
       if (change && end) change(curve);
       if (element) Object.assign(element.style, createStyles(keyframes, curve));
-      console.log(element.style.transform)
+      // console.log(element.style.transform)
       return;
     }
 

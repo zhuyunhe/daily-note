@@ -10,4 +10,15 @@ function sum(...args) {
   return fn
 }
 
-console.log(sum(1, 10, 20)(3)(4).valueOf());
+
+function _sum(...args) {
+  if (args.length === 3) {
+    return args.reduce((a, b) => a + b)
+  }
+  let fn = (...args_fn) => _sum(...[...args, ...args_fn])
+  
+  return fn
+}
+// console.log(sum(1, 10, 20)(3)(4).valueOf());
+
+console.log(_sum(1)(2)(3))

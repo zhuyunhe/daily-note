@@ -70,6 +70,7 @@
       const li = document.createElement("li");
       li.textContent = val;
       list.appendChild(li);
+      console.log(document.querySelectorAll('li').length)
     },
     setName: function (val) {
       input.value = val;
@@ -85,7 +86,7 @@
   }
   const handler = {
     get(target, key, receiver) {
-      console.log('get', key)
+      // console.log('get', key)
       const res = Reflect.get(target, key, receiver)
       // 惰性创建并返回
       if (isObject(res)) {
@@ -97,11 +98,11 @@
     set(target, key, value, receiver) {
       const hadKey = hasOwn(target, key)
       const oldValue = target[key]
-      console.log('key: ' + key + ',oldValue: '+oldValue + ', value: ' + value)
+      // console.log('key: ' + key + ',oldValue: '+oldValue + ', value: ' + value)
 
       value = reactiveToRaw.get(value) || value
 
-      console.log(target)
+      // console.log(target)
       const res = Reflect.set(target, key, value, receiver)
 
 
@@ -186,8 +187,13 @@
   });
   testBtn.addEventListener("click", function () {
     obj.info.blogs.push(obj.info.name)
+    proxy.info.tt = 's'
     console.log(obj)
   });
+
+  class {
+    
+  }
 </script>
 
 </html>

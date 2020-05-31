@@ -29,6 +29,15 @@ function recursion(a, b, i, j){
 * @param {string} b
 * @return {number} 从 a -> b 的最小编辑距离
 */
+/* 
+思路：动态规划看起来跟递归很像，不过推理逻辑正好是反过来的。递归的逻辑是：“要求得 d[m][n]，先要求得 d[m-1][n-1]……”，动态规划的逻辑是：“先求得 d[m-1][n-1]，再求 d[m][n]……”这是它们的主要区别。
+举个例子，在已知 d[0][0]，d[0][1]，d[1][0] 的前提下，要求 d[1][1]：
+
+如果 a[1] === b[1]，那么 d[1][1] 等于 d[0][0]，也就是 0；
+如果 a[1] !== b[1]，那么 d[1][1] 等于 d[0][1]、d[1][0] 和 d[0][0] 三者中的最小值 + 1，也就是 1。
+接着用同样的方式，可以求得 d[1][2]、d[1][3]、……、d[1][n]，然后继续求得 d[2][1]、d[2][2]、……、d[2][n]，一直到 d[m][n]
+
+*/
 function dynamicPlanning(a, b){
   let lenA = a.length;
   let lenB = b.length;
@@ -38,7 +47,7 @@ function dynamicPlanning(a, b){
   for (let j = 0; j <= lenB; j++) {
     d[0].push(j);
   }
-
+  console.log(d)
   for (let i = 0; i <= lenA; i++) {
     if (d[i]) {
       d[i][0] = i;
@@ -52,6 +61,7 @@ function dynamicPlanning(a, b){
     for(let j=1; j <= lenB; j++){
       if(a[i-1] === b[j-1]){
         d[i][j] = d[i-1][j-1]
+        console.log(d)
       } else{
         let m1 = d[i - 1][j] + 1;
         let m2 = d[i][j - 1] + 1;
@@ -97,6 +107,6 @@ function dynamicPlanningB(a, b) {
   return d[lenB]
 }
 
-console.log(dynamicPlanning('abc', '2ssd'))
+console.log(dynamicPlanning('abc', 'assd'))
 
-console.log(dynamicPlanningB('abc','2ssd'))
+// console.log(dynamicPlanningB('abc','2ssd'))

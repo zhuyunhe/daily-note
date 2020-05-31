@@ -11,15 +11,20 @@ function compose(...funcs){
 
   return funcs.reduce( (prev,cur, index) => {
     // console.log(index)
-    return (...args) => {
-      return prev(cur(...args))
+    console.log(prev)
+    console.log(cur)
+
+    return function g(args) {
+      return prev(cur(args))
     }
   })
 }
 
 var fn1 = val => 'fun1-' + val
 var fn2 = val => 'fun2-' + val
-var fn3 = val => 'fun3-' + val
+var fn3 = val => {
+  return 'fun3-' + val
+}
 
 // compose(fn1, fn2, fn3, fn4)('测试')
 console.log(compose(fn1, fn2, fn3)('测试'))

@@ -1,150 +1,263 @@
-"use strict";
-exports.__esModule = true;
-var START_TAG_REG = /^<([^<>\s\/]+)((\s+[^=>\s]+(\s*=\s*((\"[^"]*\")|(\'[^']*\')|[^>\s]+))?)*)\s*\/?\s*>/m;
-var END_TAG_REG = /^<\/([^>\s]+)[^>]*>/m;
-var ATTRIBUTE_REG = /([^=\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm;
-var ASTElement = /** @class */ (function () {
-    function ASTElement(type, children, tag, text, data, parent) {
-        this.type = type;
-        this.children = children;
-        this.tag = tag;
-        this.text = text;
-        this.data = data;
-        this.parent = parent;
+/* 
+polyfill
+*/
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function (search, this_len) {
+    if (this_len === undefined || this_len > this.length) {
+      this_len = this.length;
     }
-    return ASTElement;
-}());
-exports.ASTElement = ASTElement;
-function parse(source) {
-    var result = {
-        children: []
-    };
-    var stack = [];
-    var parent = null;
-    stack.push(result);
-    parent = result;
-    var _loop_1 = function () {
-        if (source.startsWith('<!--')) {
-            var endIndex = source.indexOf('-->');
-            if (endIndex !== -1) {
-                parent.children.push(new ASTElement('Comment', [], '', source.substring(4, endIndex), {}, parent));
-                source = source.substring(endIndex + 3);
-                return "continue";
-            }
+    return this.substring(this_len - search.length, this_len) === search;
+  };
+}
+class ASTElement {
+  /* 
+    type: 'Element' | 'SelfCloseElement' | 'Text' | 'Comment'
+    children: 子节点
+    tag: 标签名，只有Element节点有
+    text: 文本内容，只有Text、Comment节点有
+    data: attrs属性数据
+    parent: 父节点
+  */
+  constructor(type, children, tag, text, data, parent) {
+    this.type = type;
+    this.children = children;
+    this.tag = tag;
+    this.text = text;
+    this.data = data;
+    this.parent = parent;
+  }
+}
+class HtmlParse {
+  constructor() {
+    this.startTagRe = /^<([^>\s\/]+)((\s+[^=>\s]+(\s*=\s*((\"[^"]*\")|(\'[^']*\')|[^>\s]+))?)*)\s*\/?\s*>/m;
+    this.endTagRe = /^<\/([^>\s]+)[^>]*>/m;
+    this.attrRe = /([^=|\/\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm;
+    this.stack = []
+    this.result = {
+      children: []
+    }
+    this.parent = this.result
+    this.stack.push(this.parent)
+    this.handler = {
+      startElement(sTagName, oAttrs, tag) {
+        let astElement = null
+        if (!tag.endsWith('/>')) {
+          astElement = new ASTElement('Element', [], sTagName, '', oAttrs, this.parent)
+          this.parent.children.push(astElement)
+          // 如果不是自闭和标签，入栈
+          this.stack.push(astElement)
+          this.parent = astElement
+        } else {
+          astElement = new ASTElement('SelfCloseElement', [], sTagName, '', oAttrs, this.parent)
+          this.parent.children.push(astElement)
         }
-        // 判断是否是结束标签
-        else if (source.startsWith('</') && END_TAG_REG.test(source)) {
-            var left = RegExp.leftContext;
-            var tag = RegExp.lastMatch;
-            var right = RegExp.rightContext;
-            //console.log(`发现闭合标签 ${tag}`)
-            var result_1 = tag.match(END_TAG_REG);
-            var name_1 = result_1[1];
-            if (name_1 === parent.tag) {
-                stack.pop();
-                parent = stack[stack.length - 1];
-                // console.log('闭合，出栈')
+      },
+      endElement(sTagName) {
+        if (sTagName === this.parent.tag) {
+          this.stack.pop()
+          this.parent = this.stack[this.stack.length - 1]
+        } else {
+          throw new Error('闭合标签对不上，html 语法出错');
+        }
+      },
+      // 处理文本内容
+      characters(s) {
+        if (this.parent.children[this.parent.children.length - 1] && this.parent.children[this.parent.children.length - 1].type === 'Text') {
+          this.parent.children[this.parent.children.length - 1].text += s
+        } else {
+          let astElement = new ASTElement('Text', [], '', s, [], this.parent)
+          this.parent.children.push(astElement)
+        }
+      },
+      // 处理注释内容
+      comment(s) {
+        let astElement = new ASTElement('Comment', [], '', s, [], this.parent)
+        this.parent.children.push(astElement)
+      }
+    }
+    this.handler.startElement = this.handler.startElement.bind(this)
+    this.handler.endElement = this.handler.endElement.bind(this)
+    this.handler.characters = this.handler.characters.bind(this)
+    this.handler.comment = this.handler.comment.bind(this)
+  }
+  reset() {
+    this.stack = []
+    this.result = {
+      children: []
+    }
+    this.parent = this.result
+    this.stack.push(this.parent)
+  }
+  parse(s = '') {
+    if (typeof s === 'string') {
+      this.reset();
+      s = s.replace(/\r?\n/g, '')
+      let oThis = this;
+      let lm, rc, index;
+      let treatAsChars = false;
+      let start = null
+      try {
+        while (s.length > 0) {
+          // Comment
+          if (s.substring(0, 4) == "<!--") {
+            index = s.indexOf("-->");
+            if (index !== -1) {
+              this.handler.comment(s.substring(4, index));
+              s = s.substring(index + 3);
+              treatAsChars = false;
             }
             else {
-                throw new Error('闭合标签对不上，html 语法出错');
+              console.log('处理文字~')
+              treatAsChars = true;
             }
-            source = right;
-            return "continue";
-        }
-        // 判断是否是开始标签
-        else if (source.charAt(0) === '<' && START_TAG_REG.test(source)) {
-            var left = RegExp.leftContext;
-            var tag = RegExp.lastMatch;
-            var right = RegExp.rightContext;
-            var result_2 = tag.match(START_TAG_REG);
-            var tagName = result_2[1];
-            var attrs = result_2[2];
-            var attrMap_1 = {};
-            var nodeData = {
-                attrs: {},
-                events: {},
-                directives: {},
-                rawAttrs: {}
-            };
-            // 抽取 attributes
-            if (attrs) {
-                attrs.replace(ATTRIBUTE_REG, function (a0, a1, a2, a3, a4, a5, a6) {
-                    var attrName = a1;
-                    var attrValue = a3 || null;
-                    if (attrValue && attrValue.startsWith('"') && attrValue.endsWith('"')) {
-                        attrMap_1[attrName] = attrValue.slice(1, attrValue.length - 1);
-                    }
-                    else if (attrValue && attrValue.startsWith("'") && attrValue.endsWith("'")) {
-                        attrMap_1[attrName] = attrValue.slice(1, attrValue.length - 1);
-                    }
-                    else {
-                        attrMap_1[attrName] = attrValue;
-                    }
-                    return '';
+          }
+          // end tag
+          else if (s.substring(0, 2) == "</") {
+            try {
+              if (this.endTagRe.test(s)) {
+                // lm = RegExp.lastMatch;
+                // rc = RegExp.rightContext;
+                start = s.match(this.endTagRe)
+                lm = start[0]
+                rc = s.slice(lm.length)
+                lm.replace(this.endTagRe, function () {
+                  return oThis.parseEndTag(...arguments);
                 });
+                s = rc;
+                treatAsChars = false;
+              }
+              else {
+                treatAsChars = true;
+              }
+            } catch (error) {
+              console.log(error)
             }
-            processAttrs(nodeData, attrMap_1);
-            // console.log(`发现元素节点${tag}`)
-            var element = new ASTElement('Element', [], tagName, '', nodeData, parent);
-            parent.children.push(element);
-            // 如果不是自闭合 tag，入栈
-            if (!tag.endsWith('/>')) {
-                stack.push(element);
-                parent = element;
-            }
-            source = right;
-            return "continue";
-        }
-        // 处理文字
-        var index = source.indexOf('<', 1);
-        if (index == -1) {
-            if (parent.children[parent.children.length - 1] && parent.children[parent.children.length - 1].type === 'Text') {
-                parent.children[parent.children.length - 1].text += source;
+          }
+          // start tag
+          else if (s.charAt(0) == "<") {
+
+            if (this.startTagRe.test(s)) {
+
+              start = s && s.match(this.startTagRe)
+              lm = start[0]
+              rc = s && s.slice(lm.length)
+              try {
+                // 提取attribute属性
+                lm && lm.replace(this.startTagRe, function () {
+                  return oThis.parseStartTag(...arguments);
+                });
+              } catch (error) {
+                throw new Error(error)
+              }
+              s = rc;
+              treatAsChars = false;
             }
             else {
-                parent.children.push(new ASTElement('Text', [], '', source, {}, parent));
+              treatAsChars = true;
             }
-            source = '';
-        }
-        else {
-            if (parent.children[parent.children.length - 1] && parent.children[parent.children.length - 1].type === 'Text') {
-                parent.children[parent.children.length - 1].text += source.substring(0, index);
+
+          }
+          if (treatAsChars) {
+            // 文本区可能有小于、大于符号，例如<10kg，需要特殊处理，不然会死循环。index不能简单的用indexOf来求
+            // index = s.indexOf("<");
+            index = s.search(/<[^\s\d]/)
+            // 后面已经没有任何标签了，因为不管什么标签，都要以<开头
+            if (index == -1) {
+              this.handler.characters(s, true);
+              s = "";
             }
+            // 文本区可能有小于、大于符号，例如<10kg，需要特殊处理，不然会死循环
             else {
-                parent.children.push(new ASTElement('Text', [], '', source.substring(0, index), {}, parent));
+              this.handler.characters(s.substring(0, index));
+              s = s.substring(index);
             }
-            source = source.substring(index);
+          }
+          treatAsChars = true;
         }
-    };
-    while (source.length > 0) {
-        _loop_1();
+      } catch (error) {
+        // throw new Error(error)
+        // document.querySelector('#app').innerHTML = error
+      }
+      // return this.toJSX(this.result.children)
+      return this.result.children
+    } else {
+      // throw new Error('parseHtml参数类型错误~');
     }
-    return result.children;
+  }
+  // 测试用
+  toJSX(array) {
+    let jsx = array.reduce((cur, nextEle) => {
+      if (nextEle.type === 'Text') {
+        return cur + nextEle.text
+      }
+      if (nextEle.type === 'Element') {
+        let attr = nextEle.data.map(item => {
+          return `${item.name}="${item.value}" `
+        })
+        // console.log(attr.join(" "))
+        return cur + `<${nextEle.tag} ${attr.join(" ").trim()}>${nextEle.text}${this.toJSX(nextEle.children)}</${nextEle.tag}>`
+      }
+      if (nextEle.type === 'Comment') {
+        return cur + `<!-- ${nextEle.text} -->`
+      }
+    }, '')
+    return jsx
+  }
+  // 处理开始标签
+  parseStartTag(sTag, sTagName, sRest) {
+    var attrs = this.parseAttributes(sTagName, sRest);
+    this.handler.startElement(sTagName, attrs, sTag);
+  }
+  // 处理结束标签
+  parseEndTag(sTag, sTagName) {
+    this.handler.endElement(sTagName);
+  }
+  // 解析属性
+  parseAttributes(sTagName, s) {
+    let oThis = this;
+    let attrs = [];
+    try {
+      s && s.replace(this.attrRe, function (a0, a1, a2, a3, a4, a5, a6) {
+        attrs.push(oThis.parseAttribute(sTagName, a0, a1, a2, a3, a4, a5, a6));
+      });
+    } catch (error) {
+      console.log(error)
+    }
+    return attrs;
+  }
+  // 解析单个属性
+  parseAttribute(sTagName, sAttribute, sName) {
+    var value = "";
+    if (arguments[7])
+      value = arguments[8];
+    else if (arguments[5])
+      value = arguments[6];
+    else if (arguments[3])
+      value = arguments[4];
+    var empty = !value && !arguments[3];
+    return { name: sName, value: empty ? null : value };
+  }
 }
-exports["default"] = parse;
-// 处理 attr，解析出 key ref 指令 事件等
-function processAttrs(nodeData, attrMap) {
-    Object.keys(attrMap).forEach(function (k) {
-        if (k === ':key') {
-            nodeData.key = attrMap[k];
-        }
-        else if (k === 'key') {
-            nodeData.key = '`' + attrMap[k] + '`';
-        }
-        else if (k === 'ref') {
-            nodeData.ref = attrMap[k];
-        }
-        else if (k.startsWith('v-')) {
-            if (k.slice(2, 5) === 'on:') {
-                nodeData.events[k.slice(5)] = attrMap[k];
-            }
-            else {
-                nodeData.directives[k.slice(2)] = attrMap[k];
-            }
-        }
-        else {
-            nodeData.attrs[k] = attrMap[k];
-        }
-    });
-    nodeData.rawAttrs = attrMap;
-}
+
+const activityContent = `
+        <div>
+            <table width="100%" cellpadding="0" cellspacing="0" class="detail-table">
+                <tbody>
+                            <tr>
+                                <td>狗狗精致洗护（<10kg）</td>
+                                <td class="tc">1</td>
+                                <td class="tc">70元</td>
+                            </tr>
+                            <tr>
+                                <td>猫猫精致洗护（<5kg）</td>
+                                <td class="tc">1</td>
+                                <td class="tc">120元</td>
+                            </tr>
+                </tbody>
+            </table>
+                <div>适用宠物: 狗狗、猫咪</div>
+        </div>
+`
+const htmlParse = new HtmlParse()
+htmlParse.parse(activityContent)
+module.exports = HtmlParse
